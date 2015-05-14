@@ -1,0 +1,11 @@
+{
+  "name": "heroku-plugin-readme-generator",
+  "version": "1.0.0",
+  "description": "Generates a README for a Heroku plugin",
+  "main": "index.js",
+  "scripts": {
+    "test": "jshint ."
+  },
+  "author": "Jeff Dickey (@dickeyxxx)",
+  "license": "ISC"
+}
