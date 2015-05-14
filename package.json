@@ -2,9 +2,16 @@
   "name": "heroku-plugin-readme-generator",
   "version": "1.0.0",
   "description": "Generates a README for a Heroku plugin",
-  "main": "index.js",
+  "main": "run.js",
+  "bin": {
+    "heroku-plugin-readme-generator": "./run.js"
+  },
   "scripts": {
     "test": "jshint ."
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/dickeyxxx/heroku-plugin-readme-generator.git"
   },
   "author": "Jeff Dickey (@dickeyxxx)",
   "license": "ISC"
