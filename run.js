@@ -61,7 +61,7 @@ function buildReadme(plugin, pjson) {
 
   lines = lines.concat(plugin.commands.map(buildCommand));
 
-  return lines.join('\n');
+  return lines.join('\n').trim();
 }
 let readme = buildReadme(plugin, pjson);
 console.log(readme);
