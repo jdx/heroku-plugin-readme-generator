@@ -3,7 +3,7 @@
 
 var path = require('path');
 
-var dir = process.argv[2] || '.';
+var dir = process.argv[2] || process.cwd();
 var plugin = require(dir);
 var pjson = require(path.join(dir, 'package.json'));
 console.dir(plugin);
