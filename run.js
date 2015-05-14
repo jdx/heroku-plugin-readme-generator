@@ -21,7 +21,10 @@ function buildFlag (flag) {
 
 function buildCommand (command) {
   let lines = [];
-  let cmd = `heroku ${command.topic}:${command.command}`;
+  let cmd = 'heroku ' + command.topic;
+  if (command.command) {
+    command += ':' + command.command;
+  }
   for (let arg of (command.args || [])) {
     cmd += ' ' + (arg.optional ? `[${arg.name}]` : arg.name);
   }
