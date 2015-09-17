@@ -37,9 +37,11 @@ function buildCommand (command) {
     lines.push(buildFlag(flag));
     lines.push('');
   }
-  lines.push('```');
-  lines.push(command.help || 'MISSING HELP');
-  lines.push('```');
+  if (command.help) {
+    lines.push('```');
+    lines.push(command.help);
+    lines.push('```');
+  }
   lines.push('');
   return lines.join('\n');
 }
