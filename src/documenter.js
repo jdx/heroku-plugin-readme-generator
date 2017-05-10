@@ -1,4 +1,3 @@
-
 let Documenter = function () {}
 
 Documenter.buildFlag = function (flag) {
@@ -40,7 +39,6 @@ Documenter.buildReadme = function (plugin, pjson) {
   lines.push(pjson.name.replace(/./g, '='))
   lines.push('')
 
-  // TODO: parse out owner and repo name
   lines.push(`[![Build Status](https://travis-ci.org/heroku/${pjson.name}.svg?branch=master)](https://travis-ci.org/heroku/${pjson.name})`)
   lines.push(`[![License](https://img.shields.io/github/license/heroku/${pjson.name}.svg)](https://github.com/heroku/${pjson.name}/blob/master/LICENSE)`)
 
@@ -51,8 +49,6 @@ Documenter.buildReadme = function (plugin, pjson) {
   lines.push('Commands')
   lines.push('========')
   lines.push('')
-
-  lines.push('TODO: developing locally')
 
   lines = lines.concat(plugin.commands.map(Documenter.buildCommand))
 
