@@ -11,6 +11,23 @@ describe('.buildCommand', () => {
     const output = Documenter.buildCommand(cmd)
     expect(output).to.contain(`heroku ${cmd.topic}`)
   })
+  it('returns an informational message when there are no flags', () => {
+    const cmd = {topic: 'addons'}
+    const output = Documenter.buildCommand(cmd)
+    expect(output).to.contain('This command has no flags')
+  })
+  it('italicizes the first line/description', () => {
+    const desc = 'create an add-on resource'
+    const cmd = {topic: 'addons', description: desc}
+    const output = Documenter.buildCommand(cmd)
+    expect(output).to.contain(`*${desc}*`)
+  })
+  it('capitalizes arg names', () => {
+    const cmd = {topic: 'addons', args: [{name: 'computer', optional: true}, {name: 'monitor', optional: false}]}
+    const output = Documenter.buildCommand(cmd)
+    expect(output).to.contain('COMPUTER')
+    expect(output).to.contain('MONITOR')
+  })
 })
 describe('.buildFlag', () => {
   it('combines name, char, and description when they are present', () => {
@@ -29,14 +46,3 @@ describe('.buildFlag', () => {
     expect(result).to.equal('`-h` prints this help message')
   })
 })
-describe('.buildReadme', () => {
-  // const path = require('path')
-  // const dir = '/home/moriger/Heroku/heroku-cli-addons'
-  // const plugin = require(dir)
-  // const pjson = require(path.join(dir, 'package.json'))
-  //
-  // it('does some stuff', () => {
-  //   const readme = Documenter.buildReadme(plugin, pjson)
-  // })
-})
-

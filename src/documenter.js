@@ -1,36 +1,65 @@
+const _ = require('lodash')
 let Documenter = function () {}
 
 Documenter.buildFlag = function (flag) {
-  if (flag['char'] && flag.name) return `\`-${flag.char}, --${flag.name}\` ${flag.description}`
-  if (flag.name) return `\`--${flag.name}\` ${flag.description}`
-  if (flag.char) return `\`-${flag.char}\` ${flag.description}`
+  const flagDescription = flag.description || ''
+  if (flag['char'] && flag.name) {
+    return `\`-${flag.char}, --${flag.name}\` ${flagDescription}`
+  } else if (flag.name) {
+    return `\`--${flag.name}\` ${flagDescription}`
+  } else if (flag.char) {
+    return `\`-${flag.char}\` ${flagDescription}`
+  }
 }
 
 Documenter.buildCommand = function (command) {
+  if (command.hidden) return ''
   let lines = []
   let cmd = 'heroku ' + command.topic
   if (command.command) {
     cmd += ':' + command.command
   }
   for (let arg of (command.args || [])) {
-    cmd += ' ' + (arg.optional ? `[${arg.name}]` : arg.name)
+    cmd += ' ' + (arg.optional ? `[${arg.name.toUpperCase()}]` : arg.name.toUpperCase())
   }
   lines.push(cmd)
   lines.push(cmd.replace(/./g, '-'))
   lines.push('')
-  lines.push(command.description || 'MISSING DESCRIPTION')
-  lines.push('')
-  for (let flag of (command.flags || [])) {
-    lines.push(Documenter.buildFlag(flag))
-    lines.push('')
+  if (!command.description) {
+    lines.push('MISSING DESCRIPTION')
+  } else {
+    lines.push('*' + command.description + '*')
   }
+  Documenter.addAliases(lines, command)
+
+  lines.push('')
+  Documenter.buildFlags(lines, command)
+
   if (command.help) {
-    lines.push('```')
     lines.push(command.help)
-    lines.push('```')
   }
   lines.push('')
   return lines.join('\n')
+}
+
+Documenter.buildFlags = function (lines, command) {
+  if (!command.flags || command.flags.length === 0) {
+    lines.push('This command has no flags\n')
+  } else {
+    for (let flag of (command.flags || [])) {
+      lines.push(Documenter.buildFlag(flag))
+      lines.push('')
+    }
+  }
+}
+
+Documenter.addAliases = function (lines, command) {
+  if (command.aliases && command.aliases.length > 0) {
+    lines.push('Aliases:')
+    for (const alias in command.aliases) {
+      command.aliases.push(' * ' + alias.name)
+    }
+  }
 }
 
 Documenter.buildReadme = function (plugin, pjson) {
@@ -38,9 +67,6 @@ Documenter.buildReadme = function (plugin, pjson) {
   lines.push(pjson.name)
   lines.push(pjson.name.replace(/./g, '='))
   lines.push('')
-
-  lines.push(`[![Build Status](https://travis-ci.org/heroku/${pjson.name}.svg?branch=master)](https://travis-ci.org/heroku/${pjson.name})`)
-  lines.push(`[![License](https://img.shields.io/github/license/heroku/${pjson.name}.svg)](https://github.com/heroku/${pjson.name}/blob/master/LICENSE)`)
 
   lines.push('')
   lines.push(pjson.description)
@@ -50,7 +76,9 @@ Documenter.buildReadme = function (plugin, pjson) {
   lines.push('========')
   lines.push('')
 
-  lines = lines.concat(plugin.commands.map(Documenter.buildCommand))
+  // console.dir(plugin, { colors: true, depth: null })
+  const sortedPlugins = _.sortBy(plugin.commands, [(c) => c.topic, (c) => c.name])
+  lines = lines.concat(sortedPlugins.map(Documenter.buildCommand))
 
   return lines.join('\n').trim()
 }
