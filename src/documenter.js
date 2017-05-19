@@ -1,4 +1,6 @@
 const _ = require('lodash')
+
+
 let Documenter = function () {}
 
 Documenter.buildFlag = function (flag) {
@@ -62,7 +64,15 @@ Documenter.addAliases = function (lines, command) {
   }
 }
 
-Documenter.buildReadme = function (plugin, pjson) {
+Documenter.buildReadMe = function (dirs) {
+	var path = require('path')
+	let plugins = []
+  for(const dir of dirs){
+		let plug = {}
+		plug['plugin'] = require(dir)
+		plug['pjson'] = require(path.join(dir, 'package.json'))
+		plugins.push(plug)
+	}
   let lines = []
   lines.push(pjson.name)
   lines.push(pjson.name.replace(/./g, '='))
@@ -76,11 +86,15 @@ Documenter.buildReadme = function (plugin, pjson) {
   lines.push('========')
   lines.push('')
 
-  // console.dir(plugin, { colors: true, depth: null })
-  const sortedPlugins = _.sortBy(plugin.commands, [(c) => c.topic, (c) => c.name])
-  lines = lines.concat(sortedPlugins.map(Documenter.buildCommand))
+  Documenter.buildCommandList(allCommands, lines)
 
   return lines.join('\n').trim()
+}
+
+Documenter.buildCommandList = function (commands, lines) {
+	const sortedCommands = _.sortBy(commands,[(c) => c.topic, (c) => c.command ] )
+  lines = lines.concat(sortedCommands.map(Documenter.buildCommand))
+  return lines
 }
 
 module.exports = Documenter

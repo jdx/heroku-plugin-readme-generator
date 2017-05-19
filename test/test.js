@@ -46,3 +46,105 @@ describe('.buildFlag', () => {
     expect(result).to.equal('`-h` prints this help message')
   })
 })
+
+describe('.buildCommandList', () => {
+  it('takes a list of commands')
+})
+
+describe('.sortedCommands', () => {
+  it('sorts the commands alphabetically by topic, then command', () => {
+    let commands = _.clone(testCommands)
+    commands[0].topic = 'zebras'
+    const result = Documenter.sortedCommands(testCommands)
+    const correctlySorted = _.sortBy(commands, (a,b) => a.topic)
+    expect(result).
+  })
+})
+
+let testCommands = [
+  {
+    command: 'upgrade',
+    topic: 'addons',
+    description: 'change add-on plan',
+    help:'something helpful',
+    needsAuth: true,
+    wantsApp: true,
+    args: [{name: 'addon'}, {name: 'plan', optional: true}]
+  },
+  {
+    topic: 'addons',
+    command: 'attach',
+    description: 'attach add-on resource to a new app',
+    needsAuth: true,
+    needsApp: true,
+    flags: [{
+      name: 'as',
+      description: 'name for add-on attachment',
+      hasValue: true
+    },
+      {
+        name: 'confirm',
+        description: 'overwrite existing add-on attachment with same name',
+        hasValue: true
+      }],
+    args: [{name: 'addon_name'}]
+  },
+  {
+    command: 'create',
+    topic: 'addons',
+    description: 'create an add-on resource',
+    needsAuth: true,
+    needsApp: true,
+    args: [{name: 'service:plan'}],
+    variableArgs: true,
+    flags: [{
+      name: 'name',
+      description: 'name for the add-on resource',
+      hasValue: true
+    },
+      {
+        name: 'as',
+        description: 'name for the initial add-on attachment',
+        hasValue: true
+      },
+      {
+        name: 'confirm',
+        description: 'overwrite existing config vars or existing add-on attachments',
+        hasValue: true
+      },
+      {
+        name: 'wait',
+        description: 'watch add-on creation status and exit when complete'
+      }]
+  },
+  {
+    command: 'add',
+    hidden: true,
+    topic: 'addons',
+    description: 'create an add-on resource',
+    needsAuth: true,
+    needsApp: true,
+    args: [{name: 'service:plan'}],
+    variableArgs: true,
+    flags: [{
+      name: 'name',
+      description: 'name for the add-on resource',
+      hasValue: true
+    },
+      {
+        name: 'as',
+        description: 'name for the initial add-on attachment',
+        hasValue: true
+      },
+      {
+        name: 'confirm',
+        description: 'overwrite existing config vars or existing add-on attachments',
+        hasValue: true
+      },
+      {
+        name: 'wait',
+        description: 'watch add-on creation status and exit when complete'
+      }]
+  }
+]
+
