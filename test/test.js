@@ -57,7 +57,7 @@ describe('.sortedCommands', () => {
     commands[0].topic = 'zebras'
     const result = Documenter.sortedCommands(testCommands)
     const correctlySorted = _.sortBy(commands, (a,b) => a.topic)
-    expect(result).
+    // expect(result).
   })
 })
 

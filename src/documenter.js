@@ -1,6 +1,5 @@
 const _ = require('lodash')
 
-
 let Documenter = function () {}
 
 Documenter.buildFlag = function (flag) {
@@ -17,9 +16,13 @@ Documenter.buildFlag = function (flag) {
 Documenter.buildCommand = function (command) {
   if (command.hidden) return ''
   let lines = []
-  let cmd = 'heroku ' + command.topic
+  let cmd = 'heroku '
   if (command.command) {
-    cmd += ':' + command.command
+    if (Documenter.topicLinks[command.topic]) {
+      cmd += `[${command.topic}:${command.command}](${Documenter.topicLinks[command.topic]})`
+    } else {
+      cmd += command.topic + ':' + command.command
+    }
   }
   for (let arg of (command.args || [])) {
     cmd += ' ' + (arg.optional ? `[${arg.name.toUpperCase()}]` : arg.name.toUpperCase())
@@ -41,7 +44,8 @@ Documenter.buildCommand = function (command) {
     lines.push(command.help)
   }
   lines.push('')
-  return lines.join('\n')
+  lines = lines.join('\n')
+  return lines
 }
 
 Documenter.buildFlags = function (lines, command) {
@@ -63,38 +67,41 @@ Documenter.addAliases = function (lines, command) {
     }
   }
 }
+Documenter.topicLinks = {}
 
 Documenter.buildReadMe = function (dirs) {
-	var path = require('path')
-	let plugins = []
-  for(const dir of dirs){
-		let plug = {}
-		plug['plugin'] = require(dir)
-		plug['pjson'] = require(path.join(dir, 'package.json'))
-		plugins.push(plug)
-	}
-  let lines = []
-  lines.push(pjson.name)
-  lines.push(pjson.name.replace(/./g, '='))
-  lines.push('')
+  let path = require('path')
+  let allCommands = []
+  //TODO: Remove this for public consumption
+  let coreCommands = require('cli-engine/lib/commands').commands.map((command) => { new command() })
 
-  lines.push('')
-  lines.push(pjson.description)
+  allCommands = coreCommands.commands
+
+  for (const dir of dirs) {
+    let plugin
+    const pluginPath = path.join(process.cwd(), dir)
+    plugin = require(pluginPath)
+    let pjson = require(path.join(pluginPath, 'package.json'))
+    _.chain(plugin.commands.map(c => c.topic)).uniq().each((t) => { Documenter.topicLinks[t] = pjson.homepage }).value()
+    allCommands = allCommands.concat(plugin.commands)
+  }
+  let groupedCommands = _.groupBy(allCommands, 'topic')
+  let lines = []
+
+  // lines.push('')
+  // lines.push(pjson.description)
 
   lines.push('')
   lines.push('Commands')
   lines.push('========')
   lines.push('')
 
-  Documenter.buildCommandList(allCommands, lines)
+  for (let topic in groupedCommands) {
+    const sortedCommands = _.sortBy(groupedCommands[topic], 'command')
+    lines = lines.concat(sortedCommands.map(Documenter.buildCommand))
+  }
 
   return lines.join('\n').trim()
-}
-
-Documenter.buildCommandList = function (commands, lines) {
-	const sortedCommands = _.sortBy(commands,[(c) => c.topic, (c) => c.command ] )
-  lines = lines.concat(sortedCommands.map(Documenter.buildCommand))
-  return lines
 }
 
 module.exports = Documenter
