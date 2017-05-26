@@ -50,6 +50,382 @@ describe('.buildFlag', () => {
     expect(result).to.equal('`-h` prints this help message')
   })
 })
+describe('.cmdSort', () => {
+  it('puts the plain topic command before the sub-commands', () => {
+    const result = Documenter.cmdSort(orgCommands)
+    expect(result[0]).to.not.have.property('command')
+    expect(result[0]).to.have.property('topic', 'access')
+  })
+})
+
+const orgCommands = [
+  {
+    'topic': 'access',
+    'description': 'list who has access to an app',
+    'needsAuth': true,
+    'needsApp': true,
+    'flags': [
+      {
+        'name': 'json',
+        'description': 'output in json format'
+      }
+    ],
+    'homepage': 'https://github.com/heroku/heroku-orgs'
+  },
+  {
+    'topic': 'sharing',
+    'command': 'access',
+    'help': 'This command is now heroku access',
+    'variableArgs': true,
+    'hidden': true,
+    'homepage': 'https://github.com/heroku/heroku-orgs'
+  },
+  {
+    'topic': 'access',
+    'needsAuth': true,
+    'needsApp': true,
+    'command': 'add',
+    'description': 'Add new users to your app',
+    'help': 'heroku access:add user@email.com --app APP # Add a collaborator to your app\n\nheroku access:add user@email.com --app APP --permissions deploy,manage,operate # permissions must be comma separated',
+    'args': [
+      {
+        'name': 'email',
+        'optional': false
+      }
+    ],
+    'flags': [
+      {
+        'name': 'permissions',
+        'description': 'list of permissions comma separated',
+        'hasValue': true,
+        'optional': true
+      },
+      {
+        'name': 'privileges',
+        'hasValue': true,
+        'optional': true,
+        'hidden': true
+      }
+    ],
+    'homepage': 'https://github.com/heroku/heroku-orgs'
+  },
+  {
+    'topic': 'sharing',
+    'command': 'add',
+    'help': 'this command is now heroku access:add',
+    'variableArgs': true,
+    'hidden': true,
+    'homepage': 'https://github.com/heroku/heroku-orgs'
+  },
+  {
+    'topic': 'access',
+    'needsAuth': true,
+    'needsApp': true,
+    'command': 'remove',
+    'description': 'Remove users from your app',
+    'help': 'heroku access:remove user@email.com --app APP',
+    'args': [
+      {
+        'name': 'email',
+        'optional': false
+      }
+    ],
+    'homepage': 'https://github.com/heroku/heroku-orgs'
+  },
+  {
+    'topic': 'sharing',
+    'command': 'remove',
+    'help': 'this command is now heroku access:remove',
+    'variableArgs': true,
+    'hidden': true,
+    'homepage': 'https://github.com/heroku/heroku-orgs'
+  },
+  {
+    'topic': 'access',
+    'needsAuth': true,
+    'needsApp': true,
+    'command': 'update',
+    'description': 'Update existing collaborators in an org app',
+    'help': 'heroku access:update user@email.com --app APP --privileges deploy,manage,operate',
+    'args': [
+      {
+        'name': 'email',
+        'optional': false
+      }
+    ],
+    'flags': [
+      {
+        'name': 'permissions',
+        'hasValue': true,
+        'description': 'comma-delimited list of permissions to update (deploy,manage,operate)'
+      },
+      {
+        'name': 'privileges',
+        'hasValue': true,
+        'hidden': true
+      }
+    ],
+    'homepage': 'https://github.com/heroku/heroku-orgs'
+  },
+  {
+    'topic': 'apps',
+    'command': 'join',
+    'description': 'add yourself to an organization app',
+    'needsAuth': true,
+    'needsApp': true,
+    'homepage': 'https://github.com/heroku/heroku-orgs'
+  },
+  {
+    'topic': 'join',
+    'command': null,
+    'description': 'add yourself to an organization app',
+    'needsAuth': true,
+    'needsApp': true,
+    'homepage': 'https://github.com/heroku/heroku-orgs'
+  },
+  {
+    'apps': {
+      'topic': 'apps',
+      'command': 'leave',
+      'description': 'remove yourself from an organization app',
+      'needsAuth': true,
+      'needsApp': true
+    },
+    'root': {
+      'topic': 'leave',
+      'command': null,
+      'description': 'remove yourself from an organization app',
+      'needsAuth': true,
+      'needsApp': true
+    },
+    'homepage': 'https://github.com/heroku/heroku-orgs'
+  },
+  {
+    'topic': 'apps',
+    'command': 'lock',
+    'description': 'prevent organization members from joining an app',
+    'needsAuth': true,
+    'needsApp': true,
+    'homepage': 'https://github.com/heroku/heroku-orgs'
+  },
+  {
+    'topic': 'lock',
+    'description': 'prevent organization members from joining an app',
+    'needsAuth': true,
+    'needsApp': true,
+    'homepage': 'https://github.com/heroku/heroku-orgs'
+  },
+  {
+    'topic': 'apps',
+    'command': 'transfer',
+    'description': 'transfer applications to another user, organization or team',
+    'needsAuth': true,
+    'wantsApp': true,
+    'args': [
+      {
+        'name': 'recipient',
+        'description': 'user, organization or team to transfer applications to'
+      }
+    ],
+    'flags': [
+      {
+        'name': 'locked',
+        'char': 'l',
+        'hasValue': false,
+        'required': false,
+        'description': 'lock the app upon transfer'
+      },
+      {
+        'name': 'bulk',
+        'hasValue': false,
+        'required': false,
+        'description': 'transfer applications in bulk'
+      }
+    ],
+    'help': '\nExamples:\n\n  $ heroku apps:transfer collaborator@example.com\n  Transferring example to collaborator@example.com... done\n\n  $ heroku apps:transfer acme-widgets\n  Transferring example to acme-widgets... done\n\n  $ heroku apps:transfer --bulk acme-widgets\n  ...\n  ',
+    'homepage': 'https://github.com/heroku/heroku-orgs'
+  },
+  {
+    'topic': 'sharing',
+    'command': 'transfer',
+    'help': 'this command is now heroku apps:transfer',
+    'variableArgs': true,
+    'hidden': true,
+    'homepage': 'https://github.com/heroku/heroku-orgs'
+  },
+  {
+    'apps': {
+      'topic': 'apps',
+      'command': 'unlock',
+      'description': 'unlock an app so any organization member can join',
+      'needsAuth': true,
+      'needsApp': true
+    },
+    'root': {
+      'topic': 'unlock',
+      'command': null,
+      'description': 'unlock an app so any organization member can join',
+      'needsAuth': true,
+      'needsApp': true
+    },
+    'homepage': 'https://github.com/heroku/heroku-orgs'
+  },
+  {
+    'topic': 'members',
+    'description': 'list members of an organization or a team',
+    'needsAuth': true,
+    'wantsOrg': true,
+    'flags': [
+      {
+        'name': 'role',
+        'char': 'r',
+        'hasValue': true,
+        'description': 'filter by role'
+      },
+      {
+        'name': 'pending',
+        'hasValue': false,
+        'description': 'filter by pending team invitations'
+      },
+      {
+        'name': 'team',
+        'char': 't',
+        'hasValue': true,
+        'description': 'team to use'
+      },
+      {
+        'name': 'json',
+        'description': 'output in json format'
+      }
+    ],
+    'homepage': 'https://github.com/heroku/heroku-orgs'
+  },
+  {
+    'topic': 'members',
+    'command': 'add',
+    'description': 'adds a user to an organization or a team',
+    'needsAuth': true,
+    'wantsOrg': true,
+    'args': [
+      {
+        'name': 'email'
+      }
+    ],
+    'flags': [
+      {
+        'name': 'role',
+        'char': 'r',
+        'hasValue': true,
+        'required': true,
+        'description': 'member role (admin, collaborator, member, owner)'
+      },
+      {
+        'name': 'team',
+        'char': 't',
+        'hasValue': true,
+        'description': 'team to use'
+      }
+    ],
+    'homepage': 'https://github.com/heroku/heroku-orgs'
+  },
+  {
+    'topic': 'members',
+    'command': 'set',
+    'description': 'sets a members role in an organization or a team',
+    'needsAuth': true,
+    'wantsOrg': true,
+    'args': [
+      {
+        'name': 'email'
+      }
+    ],
+    'flags': [
+      {
+        'name': 'role',
+        'char': 'r',
+        'hasValue': true,
+        'required': true,
+        'description': 'member role (admin, collaborator, member, owner)'
+      },
+      {
+        'name': 'team',
+        'char': 't',
+        'hasValue': true,
+        'description': 'team to use'
+      }
+    ],
+    'homepage': 'https://github.com/heroku/heroku-orgs'
+  },
+  {
+    'topic': 'members',
+    'command': 'remove',
+    'description': 'removes a user from an organization or a team',
+    'needsAuth': true,
+    'wantsOrg': true,
+    'args': [
+      {
+        'name': 'email'
+      }
+    ],
+    'flags': [
+      {
+        'name': 'team',
+        'char': 't',
+        'hasValue': true,
+        'description': 'team to use'
+      }
+    ],
+    'homepage': 'https://github.com/heroku/heroku-orgs'
+  },
+  {
+    'topic': 'orgs',
+    'description': 'list the organizations that you are a member of',
+    'needsAuth': true,
+    'flags': [
+      {
+        'name': 'json',
+        'description': 'output in json format'
+      },
+      {
+        'name': 'enterprise',
+        'hasValue': false,
+        'description': 'filter by enterprise orgs'
+      },
+      {
+        'name': 'teams',
+        'hasValue': false,
+        'description': 'filter by teams'
+      }
+    ],
+    'homepage': 'https://github.com/heroku/heroku-orgs'
+  },
+  {
+    'topic': 'orgs',
+    'command': 'default',
+    'hidden': true,
+    'homepage': 'https://github.com/heroku/heroku-orgs'
+  },
+  {
+    'topic': 'orgs',
+    'command': 'open',
+    'description': 'open the organization interface in a browser window',
+    'needsAuth': true,
+    'needsOrg': true,
+    'homepage': 'https://github.com/heroku/heroku-orgs'
+  },
+  {
+    'topic': 'teams',
+    'description': 'list the teams that you are a member of',
+    'needsAuth': true,
+    'flags': [
+      {
+        'name': 'json',
+        'description': 'output in json format'
+      }
+    ],
+    'homepage': 'https://github.com/heroku/heroku-orgs'
+  }
+]
 
 let testCommands = [
   {

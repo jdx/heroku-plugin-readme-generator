@@ -105,7 +105,7 @@ Documenter.buildReadMe = function (dirs) {
   let corePjson = require('cli-engine/package')
   coreCommands.forEach((c) => c.homepage = corePjson.homepage)
 
-  allCommands = coreCommands//.commands
+  allCommands = coreCommands
 
   //end removal
 
@@ -120,9 +120,6 @@ Documenter.buildReadMe = function (dirs) {
   let groupedCommands = _.groupBy(allCommands, 'topic')
   let lines = []
 
-  // lines.push('')
-  // lines.push(pjson.description)
-
   lines.push('')
   lines.push('Commands')
   lines.push('========')
@@ -130,15 +127,15 @@ Documenter.buildReadMe = function (dirs) {
 
   const topics = _.keys(groupedCommands).sort()
   for (let topic of topics) {
-    const sortedCommands = _.sortBy(groupedCommands[topic], 'command')
+    const sortedCommands = Documenter.cmdSort(groupedCommands[topic])
     lines = lines.concat(sortedCommands.map(Documenter.buildCommand))
   }
 
   return lines.join('\n').trim()
 }
 
-Documenter.cmdSort = function(commands){
-
+Documenter.cmdSort = function (commands) {
+  return _.sortBy(commands, [(c) => { return c.command || 0 }])
 }
 
 module.exports = Documenter
