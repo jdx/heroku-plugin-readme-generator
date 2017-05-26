@@ -1,4 +1,5 @@
 let expect = require('chai').expect
+const _ = require('lodash')
 const Documenter = require('../src/documenter')
 describe('.buildCommand', () => {
   it('adds the topic to the output', () => {
@@ -7,9 +8,9 @@ describe('.buildCommand', () => {
     expect(output).to.contain(`heroku ${cmd.topic}`)
   })
   it('adds the command to the output', () => {
-    const cmd = {topic: 'addons'}
+    const cmd = {topic: 'addons', command: 'list'}
     const output = Documenter.buildCommand(cmd)
-    expect(output).to.contain(`heroku ${cmd.topic}`)
+    expect(output).to.contain(`heroku ${cmd.topic}:${cmd.command}`)
   })
   it('returns an informational message when there are no flags', () => {
     const cmd = {topic: 'addons'}
@@ -27,6 +28,9 @@ describe('.buildCommand', () => {
     const output = Documenter.buildCommand(cmd)
     expect(output).to.contain('COMPUTER')
     expect(output).to.contain('MONITOR')
+  })
+  describe('for v6 commands', () => {
+    it('adds the command and topic to the output')
   })
 })
 describe('.buildFlag', () => {
@@ -47,26 +51,12 @@ describe('.buildFlag', () => {
   })
 })
 
-describe('.buildCommandList', () => {
-  it('takes a list of commands')
-})
-
-describe('.sortedCommands', () => {
-  it('sorts the commands alphabetically by topic, then command', () => {
-    let commands = _.clone(testCommands)
-    commands[0].topic = 'zebras'
-    const result = Documenter.sortedCommands(testCommands)
-    const correctlySorted = _.sortBy(commands, (a,b) => a.topic)
-    // expect(result).
-  })
-})
-
 let testCommands = [
   {
     command: 'upgrade',
     topic: 'addons',
     description: 'change add-on plan',
-    help:'something helpful',
+    help: 'something helpful',
     needsAuth: true,
     wantsApp: true,
     args: [{name: 'addon'}, {name: 'plan', optional: true}]

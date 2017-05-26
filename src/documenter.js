@@ -18,11 +18,29 @@ Documenter.buildCommand = function (command) {
   let lines = []
   let cmd = 'heroku '
   if (command.command) {
-    if (Documenter.topicLinks[command.topic]) {
-      cmd += `[${command.topic}:${command.command}](${Documenter.topicLinks[command.topic]})`
+    if (command.homepage) {
+      cmd += `[${command.topic}:${command.command}](${command.homepage})`
     } else {
       cmd += command.topic + ':' + command.command
     }
+  } else if (command.default) {
+    if (command.homepage) {
+      cmd += `[${command.default.topic}`
+      if (!!command.default.command) {
+        cmd += `:${command.default.command}`
+      }
+      cmd += `](${command.homepage})`
+    } else {
+      cmd += command.default.topic
+      if (command.default.command) cmd += ':' + command.default.command
+    }
+    // cmd += command.topic + ':'
+  } else if (command.topic) {
+    cmd += command.topic
+  } else if (command.default && command.default.topic) {
+    cmd += command.default.topic
+  } else {
+    return ''
   }
   for (let arg of (command.args || [])) {
     cmd += ' ' + (arg.optional ? `[${arg.name.toUpperCase()}]` : arg.name.toUpperCase())
@@ -30,10 +48,11 @@ Documenter.buildCommand = function (command) {
   lines.push(cmd)
   lines.push(cmd.replace(/./g, '-'))
   lines.push('')
-  if (!command.description) {
+  if (!command.description && (!command.default || !command.default.description)) {
     lines.push('MISSING DESCRIPTION')
   } else {
-    lines.push('*' + command.description + '*')
+    const desc = command.description || command.default.description
+    lines.push('*' + desc + '*')
   }
   Documenter.addAliases(lines, command)
 
@@ -49,13 +68,22 @@ Documenter.buildCommand = function (command) {
 }
 
 Documenter.buildFlags = function (lines, command) {
-  if (!command.flags || command.flags.length === 0) {
-    lines.push('This command has no flags\n')
-  } else {
+  let flags = []
+  if (command.default && command.default.flags) {
+    lines.push('')
+    flags = command.default.flags
+    //TODO: figure out v6 flags
+    // for(let flag in flags){
+    //   console.dir(flags[flag], { colors: true, depth: null })
+    // }
+  } else if (command.flags && command.flags.length) {
+    flags = command.flags
     for (let flag of (command.flags || [])) {
       lines.push(Documenter.buildFlag(flag))
       lines.push('')
     }
+  } else {
+    lines.push('This command has no flags\n')
   }
 }
 
@@ -73,16 +101,20 @@ Documenter.buildReadMe = function (dirs) {
   let path = require('path')
   let allCommands = []
   //TODO: Remove this for public consumption
-  let coreCommands = require('cli-engine/lib/commands').commands.map((command) => { new command() })
+  let coreCommands = require('cli-engine/lib/commands').commands///.map((command) => { new command() })
+  let corePjson = require('cli-engine/package')
+  coreCommands.forEach((c) => c.homepage = corePjson.homepage)
 
-  allCommands = coreCommands.commands
+  allCommands = coreCommands//.commands
+
+  //end removal
 
   for (const dir of dirs) {
     let plugin
     const pluginPath = path.join(process.cwd(), dir)
     plugin = require(pluginPath)
     let pjson = require(path.join(pluginPath, 'package.json'))
-    _.chain(plugin.commands.map(c => c.topic)).uniq().each((t) => { Documenter.topicLinks[t] = pjson.homepage }).value()
+    plugin.commands.forEach((c) => c.homepage = pjson.homepage)
     allCommands = allCommands.concat(plugin.commands)
   }
   let groupedCommands = _.groupBy(allCommands, 'topic')
@@ -96,12 +128,17 @@ Documenter.buildReadMe = function (dirs) {
   lines.push('========')
   lines.push('')
 
-  for (let topic in groupedCommands) {
+  const topics = _.keys(groupedCommands).sort()
+  for (let topic of topics) {
     const sortedCommands = _.sortBy(groupedCommands[topic], 'command')
     lines = lines.concat(sortedCommands.map(Documenter.buildCommand))
   }
 
   return lines.join('\n').trim()
+}
+
+Documenter.cmdSort = function(commands){
+
 }
 
 module.exports = Documenter
