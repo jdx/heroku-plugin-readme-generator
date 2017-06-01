@@ -1,31 +1,31 @@
 let expect = require('chai').expect
 const _ = require('lodash')
-const Documenter = require('../src/documenter')
+const Setsumeisho = require('../src/setsumeisho')
 describe('.buildCommand', () => {
   it('adds the topic to the output', () => {
     const cmd = {topic: 'addons'}
-    const output = Documenter.buildCommand(cmd)
+    const output = Setsumeisho.buildCommand(cmd)
     expect(output).to.contain(`heroku ${cmd.topic}`)
   })
   it('adds the command to the output', () => {
     const cmd = {topic: 'addons', command: 'list'}
-    const output = Documenter.buildCommand(cmd)
+    const output = Setsumeisho.buildCommand(cmd)
     expect(output).to.contain(`heroku ${cmd.topic}:${cmd.command}`)
   })
   it('returns an informational message when there are no flags', () => {
     const cmd = {topic: 'addons'}
-    const output = Documenter.buildCommand(cmd)
+    const output = Setsumeisho.buildCommand(cmd)
     expect(output).to.contain('This command has no flags')
   })
   it('italicizes the first line/description', () => {
     const desc = 'create an add-on resource'
     const cmd = {topic: 'addons', description: desc}
-    const output = Documenter.buildCommand(cmd)
+    const output = Setsumeisho.buildCommand(cmd)
     expect(output).to.contain(`*${desc}*`)
   })
   it('capitalizes arg names', () => {
     const cmd = {topic: 'addons', args: [{name: 'computer', optional: true}, {name: 'monitor', optional: false}]}
-    const output = Documenter.buildCommand(cmd)
+    const output = Setsumeisho.buildCommand(cmd)
     expect(output).to.contain('COMPUTER')
     expect(output).to.contain('MONITOR')
   })
@@ -49,30 +49,30 @@ describe('.termFormat', () => {
 
 
 \`\`\``
-    const result = Documenter.termFormat(sample)
+    const result = Setsumeisho.termFormat(sample)
     expect(result).to.contain(expectedResult)
   })
 })
 describe('.buildFlag', () => {
   it('combines name, char, and description when they are present', () => {
     const flag = {char: 'h', name: 'help', description: 'prints this help message'}
-    let result = Documenter.buildFlag(flag)
+    let result = Setsumeisho.buildFlag(flag)
     expect(result).to.equal('`-h, --help` prints this help message')
   })
   it('combines the name and description when only they are preset', () => {
     const flag = {name: 'help', description: 'prints this help message'}
-    let result = Documenter.buildFlag(flag)
+    let result = Setsumeisho.buildFlag(flag)
     expect(result).to.equal('`--help` prints this help message')
   })
   it('combines only the char and description when only they are present', () => {
     const flag = {char: 'h', description: 'prints this help message'}
-    let result = Documenter.buildFlag(flag)
+    let result = Setsumeisho.buildFlag(flag)
     expect(result).to.equal('`-h` prints this help message')
   })
 })
 describe('.cmdSort', () => {
   it('puts the plain topic command before the sub-commands', () => {
-    const result = Documenter.cmdSort(orgCommands)
+    const result = Setsumeisho.cmdSort(orgCommands)
     expect(result[0]).to.not.have.property('command')
     expect(result[0]).to.have.property('topic', 'access')
   })

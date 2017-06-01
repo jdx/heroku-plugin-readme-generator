@@ -1,8 +1,10 @@
+//Setsumeisho literally means 'instructions' in Japanese
+
 const _ = require('lodash')
 
-let Documenter = function () {}
+let Setsumeisho = function () {}
 
-Documenter.buildFlag = function (flag) {
+Setsumeisho.buildFlag = function (flag) {
   const flagDescription = flag.description || ''
   if (flag['char'] && flag.name) {
     return `\`-${flag.char}, --${flag.name}\` ${flagDescription}`
@@ -13,7 +15,7 @@ Documenter.buildFlag = function (flag) {
   }
 }
 
-Documenter.buildCommand = function (command) {
+Setsumeisho.buildCommand = function (command) {
   if (command.hidden) return ''
   let lines = []
   let cmd = 'heroku '
@@ -54,13 +56,13 @@ Documenter.buildCommand = function (command) {
     const desc = command.description || command.default.description
     lines.push('*' + desc + '*')
   }
-  Documenter.addAliases(lines, command)
+  Setsumeisho.addAliases(lines, command)
 
   lines.push('')
-  Documenter.buildFlags(lines, command)
+  Setsumeisho.buildFlags(lines, command)
 
   if (command.help) {
-    lines.push(Documenter.termFormat(command.help))
+    lines.push(Setsumeisho.termFormat(command.help))
   }
   lines.push('')
   lines.push(`[(top)](#introduction)`)
@@ -69,7 +71,7 @@ Documenter.buildCommand = function (command) {
   return lines
 }
 
-Documenter.termFormat = function (lines) {
+Setsumeisho.termFormat = function (lines) {
   let open = false
   let splitLines = lines.split('\n')
   for (let i in splitLines) {
@@ -97,7 +99,7 @@ Documenter.termFormat = function (lines) {
   return splitLines.join('\n')
 }
 
-Documenter.buildFlags = function (lines, command) {
+Setsumeisho.buildFlags = function (lines, command) {
   let flags = []
   if (command.default && command.default.flags) {
     lines.push('')
@@ -109,7 +111,7 @@ Documenter.buildFlags = function (lines, command) {
   } else if (command.flags && command.flags.length) {
     flags = command.flags
     for (let flag of (command.flags || [])) {
-      lines.push(Documenter.buildFlag(flag))
+      lines.push(Setsumeisho.buildFlag(flag))
       lines.push('')
     }
   } else {
@@ -117,7 +119,7 @@ Documenter.buildFlags = function (lines, command) {
   }
 }
 
-Documenter.addAliases = function (lines, command) {
+Setsumeisho.addAliases = function (lines, command) {
   if (command.aliases && command.aliases.length > 0) {
     lines.push('Aliases:')
     for (const alias in command.aliases) {
@@ -125,9 +127,9 @@ Documenter.addAliases = function (lines, command) {
     }
   }
 }
-Documenter.topicLinks = {}
+Setsumeisho.topicLinks = {}
 
-Documenter.buildReadMe = function (dirs) {
+Setsumeisho.build = function (dirs) {
   let path = require('path')
   let allCommands = []
   //TODO: Remove this for public consumption
@@ -157,15 +159,15 @@ Documenter.buildReadMe = function (dirs) {
 
   const topics = _.keys(groupedCommands).sort()
   for (let topic of topics) {
-    const sortedCommands = Documenter.cmdSort(groupedCommands[topic])
-    lines = lines.concat(sortedCommands.map(Documenter.buildCommand))
+    const sortedCommands = Setsumeisho.cmdSort(groupedCommands[topic])
+    lines = lines.concat(sortedCommands.map(Setsumeisho.buildCommand))
   }
 
   return lines.join('\n').trim()
 }
 
-Documenter.cmdSort = function (commands) {
+Setsumeisho.cmdSort = function (commands) {
   return _.sortBy(commands, [(c) => { return c.command || 0 }])
 }
 
-module.exports = Documenter
+module.exports = Setsumeisho
