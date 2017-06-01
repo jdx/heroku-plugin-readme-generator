@@ -33,6 +33,26 @@ describe('.buildCommand', () => {
     it('adds the command and topic to the output')
   })
 })
+
+describe('.termFormat', () => {
+  it('wraps 4-space-indented code in the terminal markdown', () => {
+    const sample = `Example:
+
+    echo "hello world, world"
+    sudo /sbin/telinit 0
+
+`
+    const expectedResult = `
+\`\`\`term
+    echo "hello world, world"
+    sudo /sbin/telinit 0
+
+
+\`\`\``
+    const result = Documenter.termFormat(sample)
+    expect(result).to.contain(expectedResult)
+  })
+})
 describe('.buildFlag', () => {
   it('combines name, char, and description when they are present', () => {
     const flag = {char: 'h', name: 'help', description: 'prints this help message'}

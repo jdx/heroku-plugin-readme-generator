@@ -60,11 +60,41 @@ Documenter.buildCommand = function (command) {
   Documenter.buildFlags(lines, command)
 
   if (command.help) {
-    lines.push(command.help)
+    lines.push(Documenter.termFormat(command.help))
   }
+  lines.push('')
+  lines.push(`[(top)](#introduction)`)
   lines.push('')
   lines = lines.join('\n')
   return lines
+}
+
+Documenter.termFormat = function (lines) {
+  let open = false
+  let splitLines = lines.split('\n')
+  for (let i in splitLines) {
+    if (!open) {
+      if (splitLines[i].match(/^[\s]{4,4}/)) {
+        open = true
+        splitLines[i - 1] = '\n```term'
+      }
+      if (Number(i) + 1 === splitLines.length && open) {
+        open = false
+        splitLines[i] = splitLines[i] + '\n```\n'
+      }
+    } else {
+      if (Number(i) + 1 === splitLines.length) {
+        splitLines[i] = splitLines[i] + '\n```\n'
+        open = false
+      } else if (splitLines[i].match(/^[\s]*$/) && splitLines[Number(i) + 1].match(/^[\s]{4,4}[\w]+/)) {
+        //do nothing
+      } else if (splitLines[i].match(/^[\s]*$/) && splitLines[Number(i) + 1].match(/^[\s]{0,3}[\w]+/)) {
+        splitLines[i] = splitLines[i] + '\n```\n'
+        open = false
+      }
+    }
+  }
+  return splitLines.join('\n')
 }
 
 Documenter.buildFlags = function (lines, command) {
