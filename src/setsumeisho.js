@@ -18,25 +18,12 @@ Setsumeisho.buildFlag = function (flag) {
 Setsumeisho.buildCommand = function (command) {
   if (command.hidden) return ''
   let lines = []
-  let cmd = 'heroku '
+  let cmd = '### `heroku '
   if (command.command) {
-    if (command.homepage) {
-      cmd += `[${command.topic}:${command.command}](${command.homepage})`
-    } else {
-      cmd += command.topic + ':' + command.command
-    }
+    cmd += command.topic + ':' + command.command
   } else if (command.default) {
-    if (command.homepage) {
-      cmd += `[${command.default.topic}`
-      if (!!command.default.command) {
-        cmd += `:${command.default.command}`
-      }
-      cmd += `](${command.homepage})`
-    } else {
-      cmd += command.default.topic
-      if (command.default.command) cmd += ':' + command.default.command
-    }
-    // cmd += command.topic + ':'
+    cmd += command.default.topic
+    if (command.default.command) cmd += ':' + command.default.command
   } else if (command.topic) {
     cmd += command.topic
   } else if (command.default && command.default.topic) {
@@ -47,8 +34,9 @@ Setsumeisho.buildCommand = function (command) {
   for (let arg of (command.args || [])) {
     cmd += ' ' + (arg.optional ? `[${arg.name.toUpperCase()}]` : arg.name.toUpperCase())
   }
+  cmd += '`'
   lines.push(cmd)
-  lines.push(cmd.replace(/./g, '-'))
+  //lines.push(cmd.replace(/./g, '-'))
   lines.push('')
   if (!command.description && (!command.default || !command.default.description)) {
     lines.push('MISSING DESCRIPTION')
@@ -59,13 +47,14 @@ Setsumeisho.buildCommand = function (command) {
   Setsumeisho.addAliases(lines, command)
 
   lines.push('')
+  lines.push('#### Flags')
   Setsumeisho.buildFlags(lines, command)
 
   if (command.help) {
     lines.push(Setsumeisho.termFormat(command.help))
   }
   lines.push('')
-  lines.push(`[(top)](#introduction)`)
+  lines.push(`[(top)](#table-of-contents)\n`)
   lines.push('')
   lines = lines.join('\n')
   return lines
@@ -84,6 +73,7 @@ Setsumeisho.termFormat = function (lines) {
         open = false
         splitLines[i] = splitLines[i] + '\n```\n'
       }
+      splitLines[i] = splitLines[i].replace(/^[\s]+/, '')
     } else {
       if (Number(i) + 1 === splitLines.length) {
         splitLines[i] = splitLines[i] + '\n```\n'
@@ -94,9 +84,10 @@ Setsumeisho.termFormat = function (lines) {
         splitLines[i] = splitLines[i] + '\n```\n'
         open = false
       }
+      splitLines[i] = splitLines[i].replace(/^[\s]+/, '')
     }
   }
-  return splitLines.join('\n')
+  return splitLines.join('\n').replace(/\s?Example/g, '#### Example').replace(/^Overview/m, '### Overview')
 }
 
 Setsumeisho.buildFlags = function (lines, command) {
@@ -129,26 +120,29 @@ Setsumeisho.addAliases = function (lines, command) {
 }
 Setsumeisho.topicLinks = {}
 
+Setsumeisho.groupByTopic = function (commands) {
+
+}
 Setsumeisho.build = function (dirs) {
   let path = require('path')
   let allCommands = []
-  //TODO: Remove this for public consumption
+  let topicObjs = []
   let coreCommands = require('cli-engine/lib/commands').commands///.map((command) => { new command() })
   let corePjson = require('cli-engine/package')
-  coreCommands.forEach((c) => c.homepage = corePjson.homepage)
+  topicObjs.push(require('cli-engine').topic)
+  coreCommands.forEach((c) => { c.homepage = corePjson.homepage }) //; c.topic === undefined ? c.topic = 'core' : noop() })
 
   allCommands = coreCommands
-
-  //end removal
-
   for (const dir of dirs) {
     let plugin
     const pluginPath = path.join(process.cwd(), dir)
     plugin = require(pluginPath)
+    topicObjs.push(plugin.topic)
     let pjson = require(path.join(pluginPath, 'package.json'))
     plugin.commands.forEach((c) => c.homepage = pjson.homepage)
     allCommands = allCommands.concat(plugin.commands)
   }
+  allCommands.forEach((c) => { c.default ? (c.topic = c.default.topic) : _.noop() })
   let groupedCommands = _.groupBy(allCommands, 'topic')
   let lines = []
 
@@ -159,7 +153,11 @@ Setsumeisho.build = function (dirs) {
 
   const topics = _.keys(groupedCommands).sort()
   for (let topic of topics) {
+    if (topic.match(/^_/)) continue
     const sortedCommands = Setsumeisho.cmdSort(groupedCommands[topic])
+    if (topic !== undefined && topic !== "undefined") lines.push(`## ${topic}\n`)
+    const topicObj = _.find(topicObjs, (t) => t && t.name === topic && t.overview)
+    if (topicObj && topicObj.overview) lines.push(Setsumeisho.termFormat(topicObj.overview + '\n'))
     lines = lines.concat(sortedCommands.map(Setsumeisho.buildCommand))
   }
 

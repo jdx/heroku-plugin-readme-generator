@@ -29,13 +29,33 @@ describe('.buildCommand', () => {
     expect(output).to.contain('COMPUTER')
     expect(output).to.contain('MONITOR')
   })
-  describe('for v6 commands', () => {
-    it('adds the command and topic to the output')
-  })
+	it('wraps the command in backticks', () => {
+    const cmd = {topic: 'addons', args: [{name: 'computer', optional: true}, {name: 'monitor', optional: false}]}
+    const output = Setsumeisho.buildCommand(cmd)
+    const firstline = output.split('\n')[0]
+    expect(firstline).to.match(/`$/)
+	  expect(firstline).to.match(/^### `heroku addons/)
+	})
+	it('adds an h4 title before the flags', () => {
+    const cmd = {topic: 'addons', args: [{name: 'computer', optional: true}, {name: 'monitor', optional: false}]}
+    const output = Setsumeisho.buildCommand(cmd)
+		expect(output).to.contain('#### Flags')
+	})
+})
+
+descsribe('.groupByTopics', () => {
+
 })
 
 describe('.termFormat', () => {
-  it('wraps 4-space-indented code in the terminal markdown', () => {
+    const sample = `Example:
+
+    echo "hello world, world"
+    sudo /sbin/telinit 0
+
+`
+
+  it('wraps 4-space-indented code in the terminal markdown, and strips leading spaces', () => {
     const sample = `Example:
 
     echo "hello world, world"
@@ -44,14 +64,30 @@ describe('.termFormat', () => {
 `
     const expectedResult = `
 \`\`\`term
-    echo "hello world, world"
-    sudo /sbin/telinit 0
-
+echo "hello world, world"
+sudo /sbin/telinit 0
 
 \`\`\``
     const result = Setsumeisho.termFormat(sample)
     expect(result).to.contain(expectedResult)
   })
+	it('pads Example/s headings with markdown h4', () => {
+    const result = Setsumeisho.termFormat(sample)
+		expect(result).to.match(/^#### Example/)
+
+    const anotherSample = `Example:
+
+    echo "hello world, world"
+    sudo /sbin/telinit 0
+
+Example:
+
+		echo "goodbye, friend"
+
+`
+		const anotherResult = Setsumeisho.termFormat(anotherSample)
+		expect(anotherResult).to.contain('\n#### Example')
+	})
 })
 describe('.buildFlag', () => {
   it('combines name, char, and description when they are present', () => {
