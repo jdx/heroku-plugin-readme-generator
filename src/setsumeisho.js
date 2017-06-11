@@ -1,4 +1,4 @@
-//Setsumeisho literally means 'instructions' in Japanese
+// Setsumeisho literally means 'instructions' in Japanese
 
 const _ = require('lodash')
 
@@ -16,7 +16,7 @@ Setsumeisho.buildFlag = function (flag) {
 }
 
 Setsumeisho.buildCommand = function (command) {
-  if (command.hidden) return ''
+  if (command.hidden || (command.default && command.default.hidden)) return ''
   let lines = []
   let cmd = '### `heroku '
   if (command.command) {
@@ -36,12 +36,11 @@ Setsumeisho.buildCommand = function (command) {
   }
   cmd += '`'
   lines.push(cmd)
-  //lines.push(cmd.replace(/./g, '-'))
   lines.push('')
   if (!command.description && (!command.default || !command.default.description)) {
     lines.push('MISSING DESCRIPTION')
   } else {
-    const desc = command.description || command.default.description
+    const desc = (command.description || command.default.description).replace(/^[A-Z]{1,}/, (s) => s.toLowerCase()).replace(/\.$/, '')
     lines.push('*' + desc + '*')
   }
   Setsumeisho.addAliases(lines, command)
@@ -79,7 +78,7 @@ Setsumeisho.termFormat = function (lines) {
         splitLines[i] = splitLines[i] + '\n```\n'
         open = false
       } else if (splitLines[i].match(/^[\s]*$/) && splitLines[Number(i) + 1].match(/^[\s]{4,4}[\w]+/)) {
-        //do nothing
+        // do nothing
       } else if (splitLines[i].match(/^[\s]*$/) && splitLines[Number(i) + 1].match(/^[\s]{0,3}[\w]+/)) {
         splitLines[i] = splitLines[i] + '\n```\n'
         open = false
@@ -91,16 +90,7 @@ Setsumeisho.termFormat = function (lines) {
 }
 
 Setsumeisho.buildFlags = function (lines, command) {
-  let flags = []
-  if (command.default && command.default.flags) {
-    lines.push('')
-    flags = command.default.flags
-    //TODO: figure out v6 flags
-    // for(let flag in flags){
-    //   console.dir(flags[flag], { colors: true, depth: null })
-    // }
-  } else if (command.flags && command.flags.length) {
-    flags = command.flags
+  if (command.flags && command.flags.length) {
     for (let flag of (command.flags || [])) {
       lines.push(Setsumeisho.buildFlag(flag))
       lines.push('')
@@ -120,19 +110,15 @@ Setsumeisho.addAliases = function (lines, command) {
 }
 Setsumeisho.topicLinks = {}
 
-Setsumeisho.groupByTopic = function (commands) {
-
-}
 Setsumeisho.build = function (dirs) {
   let path = require('path')
-  let allCommands = []
   let topicObjs = []
-  let coreCommands = require('cli-engine/lib/commands').commands///.map((command) => { new command() })
+  let coreCommands = require('cli-engine/lib/commands').commands
   let corePjson = require('cli-engine/package')
   topicObjs.push(require('cli-engine').topic)
-  coreCommands.forEach((c) => { c.homepage = corePjson.homepage }) //; c.topic === undefined ? c.topic = 'core' : noop() })
+  coreCommands.forEach((c) => { c.homepage = corePjson.homepage })
 
-  allCommands = coreCommands
+  let allCommands = coreCommands
   for (const dir of dirs) {
     let plugin
     const pluginPath = path.join(process.cwd(), dir)
@@ -143,6 +129,7 @@ Setsumeisho.build = function (dirs) {
     allCommands = allCommands.concat(plugin.commands)
   }
   allCommands.forEach((c) => { c.default ? (c.topic = c.default.topic) : _.noop() })
+  let commands = allCommands.find((c) => { c.topic === 'commands' })
   let groupedCommands = _.groupBy(allCommands, 'topic')
   let lines = []
 
@@ -153,19 +140,64 @@ Setsumeisho.build = function (dirs) {
 
   const topics = _.keys(groupedCommands).sort()
   for (let topic of topics) {
-    if (topic.match(/^_/)) continue
-    const sortedCommands = Setsumeisho.cmdSort(groupedCommands[topic])
-    if (topic !== undefined && topic !== "undefined") lines.push(`## ${topic}\n`)
-    const topicObj = _.find(topicObjs, (t) => t && t.name === topic && t.overview)
-    if (topicObj && topicObj.overview) lines.push(Setsumeisho.termFormat(topicObj.overview + '\n'))
-    lines = lines.concat(sortedCommands.map(Setsumeisho.buildCommand))
+    if (Setsumeisho.skipTopic(topic, groupedCommands) === false) {
+      const sortedCommands = Setsumeisho.cmdSort(groupedCommands[topic])
+      if (topic !== undefined && topic !== 'undefined') lines.push(`## ${topic}\n`)
+      const topicObj = _.find(topicObjs, (t) => t && t.name === topic && t.overview)
+      if (topicObj && topicObj.overview) lines.push(Setsumeisho.termFormat(topicObj.overview + '\n'))
+      lines = lines.concat(sortedCommands.map(Setsumeisho.buildCommand))
+    }
   }
 
   return lines.join('\n').trim()
 }
 
+Setsumeisho.skipTopic = function (topic, commands) {
+  if (topic.match(/^_/))
+    return true
+
+  if (commands[topic].length === 0)
+    return true
+
+  if (commands[topic][0].default) {
+    let hiddenVals = _.uniq(commands[topic].map((c) => c.default.hidden))
+    if (hiddenVals.length === 1 && hiddenVals[0] === true) return true
+    if (hiddenVals.includes(false)) return false
+  } else {
+    let unique = _.uniq(commands[topic].map((c) => c.hidden))
+    if (unique.length === 1 && unique[0])
+      return true
+    if (unique.includes(false)) return false
+  }
+
+  if (commands[topic].filter((c) => !c.hidden).length === 0)
+    return true
+
+  return false
+}
+
+Setsumeisho.hidden = function (command) {
+  if (_.isUndefined(command, 'default')) {
+    if (command.hidden) {
+      return true
+    } else {
+      return false
+    }
+  } else if (!_.isUndefined(command, 'default')) {
+    if (command.default.hidden) {
+      return true
+    } else {
+      return false
+    }
+  }
+}
+
 Setsumeisho.cmdSort = function (commands) {
-  return _.sortBy(commands, [(c) => { return c.command || 0 }])
+  if (commands[0].default) {
+    return _.sortBy(commands, [(c) => { return c.default.command ? c.default.command : '0' }])
+  } else {
+    return _.sortBy(commands, [(c) => { return c.command ? c.command : '0' }])
+  }
 }
 
 module.exports = Setsumeisho
