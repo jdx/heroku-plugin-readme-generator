@@ -13,11 +13,15 @@
     "url": "https://github.com/dickeyxxx/heroku-plugin-readme-generator.git"
   },
   "scripts": {
-    "test": "mocha && standard"
+    "test": "jest && standard"
   },
   "devDependencies": {
-    "mocha": "2.4.5",
-    "standard": "6.0.8",
-    "unexpected": "10.13.2"
+    "standard": "6.0.8"
+  },
+  "dependencies": {
+    "chai": "^3.5.0",
+    "cli-engine": "3.3.5",
+    "jest": "19.0.2",
+    "lodash": "4.17.4"
   }
 }
